@@ -28,6 +28,10 @@ export const Navbar = ({ darkMode, toggleDarkMode }: NavbarProps) => {
     { path: '/', label: 'Trang chủ', roles: ['admin', 'lecturer', 'student'] },
     { path: '/dashboard', label: 'Bảng điều khiển', roles: ['admin', 'lecturer', 'student'] },
     { path: '/courses', label: 'Khóa học', roles: ['admin', 'lecturer', 'student'] },
+    { path: '/assignments', label: 'Bài tập', roles: ['admin', 'lecturer', 'student'] },
+    { path: '/attendance', label: 'Điểm danh', roles: ['admin', 'lecturer', 'student'] },
+    { path: '/announcements', label: 'Thông báo', roles: ['admin', 'lecturer', 'student'] },
+    { path: '/enrollments', label: 'Ghi danh', roles: ['admin', 'lecturer'] },
     { path: '/users', label: 'Người dùng', roles: ['admin'] },
     { path: '/admin', label: 'Tạo tài khoản', roles: ['admin'] },
   ];
