@@ -14,6 +14,10 @@ import Admin from "./pages/Admin";
 import Courses from "./pages/Courses";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
+import Assignments from "./pages/Assignments";
+import Attendance from "./pages/Attendance";
+import Announcements from "./pages/Announcements";
+import Enrollments from "./pages/Enrollments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,6 +106,46 @@ const App = () => {
                   <ProtectedRoute>
                     <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
                       <Profile />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/assignments"
+                element={
+                  <ProtectedRoute>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <Assignments />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/attendance"
+                element={
+                  <ProtectedRoute>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <Attendance />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/announcements"
+                element={
+                  <ProtectedRoute>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <Announcements />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/enrollments"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'lecturer']}>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <Enrollments />
                     </Layout>
                   </ProtectedRoute>
                 }
