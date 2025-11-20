@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
-  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự'),
 });
 
 const Auth = () => {

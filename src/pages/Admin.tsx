@@ -19,6 +19,12 @@ const Admin = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password.length < 8) {
+      toast.error('Mật khẩu phải có ít nhất 8 ký tự');
+      return;
+    }
+    
     setLoading(true);
 
     try {

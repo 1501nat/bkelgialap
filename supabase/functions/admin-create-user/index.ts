@@ -55,6 +55,13 @@ Deno.serve(async (req) => {
       )
     }
 
+    if (password.length < 8) {
+      return new Response(
+        JSON.stringify({ error: 'Mật khẩu phải có ít nhất 8 ký tự' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     if (!['admin', 'lecturer', 'student'].includes(role)) {
       return new Response(
         JSON.stringify({ error: 'Vai trò không hợp lệ' }),
