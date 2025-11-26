@@ -6,8 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Users as UsersIcon, Search, Trash2, UserCog } from 'lucide-react';
+import { Users as UsersIcon, Search, Trash2, UserCog, Key } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 interface UserData {
   id: string;
@@ -21,6 +30,10 @@ const Users = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -70,6 +83,48 @@ const Users = () => {
     } catch (error: any) {
       toast.error('Lỗi khi xóa người dùng');
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+    
+    if (newPassword.length < 8) {
+      toast.error('Mật khẩu phải có ít nhất 8 ký tự');
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { 
+          user_id: selectedUser.id,
+          new_password: newPassword
+        },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Đã đặt lại mật khẩu cho ${selectedUser.full_name}`);
+      setResetDialogOpen(false);
+      setNewPassword('');
+      setSelectedUser(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Lỗi khi đặt lại mật khẩu');
+      console.error(error);
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const openResetDialog = (user: UserData) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setResetDialogOpen(true);
   };
 
   const filteredUsers = users.filter(user =>
@@ -185,6 +240,14 @@ const Users = () => {
                     <Button
                       size="icon"
                       variant="ghost"
+                      onClick={() => openResetDialog(user)}
+                      title="Đặt lại mật khẩu"
+                    >
+                      <Key className="h-4 w-4 text-primary" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => handleDelete(user.id, user.email)}
                       disabled={user.role === 'admin'}
                     >
@@ -204,6 +267,49 @@ const Users = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Đặt lại mật khẩu</DialogTitle>
+            <DialogDescription>
+              Đặt mật khẩu mới cho <strong>{selectedUser?.full_name}</strong> ({selectedUser?.email})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="new-password">Mật khẩu mới</Label>
+              <Input
+                id="new-password"
+                type="text"
+                placeholder="Ít nhất 8 ký tự"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="off"
+              />
+              <p className="text-sm text-muted-foreground">
+                Mật khẩu này sẽ được hiển thị để bạn có thể cung cấp cho người dùng
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResetDialogOpen(false);
+                setNewPassword('');
+                setSelectedUser(null);
+              }}
+              disabled={resetting}
+            >
+              Hủy
+            </Button>
+            <Button onClick={handleResetPassword} disabled={resetting}>
+              {resetting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
