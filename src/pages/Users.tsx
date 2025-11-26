@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Users as UsersIcon, Search, Trash2, UserCog, Key } from 'lucide-react';
+import { Users as UsersIcon, Search, Trash2, UserCog, Key, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -24,6 +24,7 @@ interface UserData {
   full_name: string;
   created_at: string;
   role?: string;
+  password?: string;
 }
 
 const Users = () => {
@@ -34,6 +35,7 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [showPassword, setShowPassword] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     fetchUsers();
@@ -48,7 +50,7 @@ const Users = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch roles for each user
+      // Fetch roles and passwords for each user
       const usersWithRoles = await Promise.all(
         (profiles || []).map(async (profile) => {
           const { data: roleData } = await supabase
@@ -57,9 +59,16 @@ const Users = () => {
             .eq('user_id', profile.id)
             .single();
 
+          const { data: passwordData } = await supabase
+            .from('user_passwords')
+            .select('password')
+            .eq('user_id', profile.id)
+            .single();
+
           return {
             ...profile,
-            role: roleData?.role || 'student'
+            role: roleData?.role || 'student',
+            password: passwordData?.password || null
           };
         })
       );
@@ -113,6 +122,8 @@ const Users = () => {
       setResetDialogOpen(false);
       setNewPassword('');
       setSelectedUser(null);
+      // Refresh user list to show new password
+      fetchUsers();
     } catch (error: any) {
       toast.error(error.message || 'Lỗi khi đặt lại mật khẩu');
       console.error(error);
@@ -234,6 +245,28 @@ const Users = () => {
                       <p className="text-xs text-muted-foreground">
                         Tham gia: {new Date(user.created_at).toLocaleDateString('vi-VN')}
                       </p>
+                      {user.password && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <p className="text-xs font-mono text-primary">
+                            Mật khẩu: {showPassword[user.id] ? user.password : '••••••••'}
+                          </p>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-5 w-5"
+                            onClick={() => setShowPassword(prev => ({
+                              ...prev,
+                              [user.id]: !prev[user.id]
+                            }))}
+                          >
+                            {showPassword[user.id] ? (
+                              <EyeOff className="h-3 w-3" />
+                            ) : (
+                              <Eye className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">

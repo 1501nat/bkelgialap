@@ -101,6 +101,20 @@ Deno.serve(async (req) => {
         console.error('Error updating role:', roleUpdateError)
         // Don't fail the whole operation, user was created
       }
+
+      // Store password in user_passwords table for admin viewing
+      const { error: passwordStoreError } = await adminClient
+        .from('user_passwords')
+        .insert({ 
+          user_id: authData.user.id,
+          password: password,
+          created_by: user.id
+        })
+
+      if (passwordStoreError) {
+        console.error('Error storing password:', passwordStoreError)
+        // Don't fail the whole operation, user was created
+      }
     }
 
     return new Response(

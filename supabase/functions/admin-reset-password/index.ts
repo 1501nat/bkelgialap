@@ -82,6 +82,23 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Store password in user_passwords table for admin viewing
+    const { error: passwordStoreError } = await adminClient
+      .from('user_passwords')
+      .upsert({ 
+        user_id: user_id,
+        password: new_password,
+        created_by: user.id,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      })
+
+    if (passwordStoreError) {
+      console.error('Error storing password:', passwordStoreError)
+      // Don't fail the operation, password was already reset
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
