@@ -115,10 +115,10 @@ export const AdminDashboard = () => {
                 </Button>
               </Link>
 
-              <Link to="/admin/courses">
+              <Link to="/admin/approvals">
                 <Button className="w-full h-20 flex flex-col gap-2" variant="outline">
                   <BookOpen className="h-6 w-6" />
-                  <span>Quản lý Khóa học</span>
+                  <span>Phê duyệt Khóa học</span>
                 </Button>
               </Link>
 
@@ -154,13 +154,15 @@ export const AdminDashboard = () => {
                   <Button size="sm">Xử lý</Button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div>
-                    <h3 className="font-medium">5 yêu cầu thêm khóa học mới</h3>
-                    <p className="text-sm text-muted-foreground">Từ giảng viên</p>
+                <Link to="/admin/approvals">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10 border border-primary/20 cursor-pointer hover:bg-primary/15 transition-colors">
+                    <div>
+                      <h3 className="font-medium">Yêu cầu phê duyệt khóa học</h3>
+                      <p className="text-sm text-muted-foreground">Từ giảng viên</p>
+                    </div>
+                    <Button size="sm">Xem</Button>
                   </div>
-                  <Button size="sm">Xem</Button>
-                </div>
+                </Link>
               </div>
             </CardContent>
           </Card>

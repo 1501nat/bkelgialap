@@ -113,10 +113,14 @@ const Courses = () => {
       } else {
         const { error } = await supabase
           .from('courses')
-          .insert([{ ...formData, lecturer_id: role === 'lecturer' ? user?.id : null }]);
+          .insert([{
+            ...formData,
+            lecturer_id: role === 'lecturer' ? user?.id : null,
+            status: 'pending'
+          }]);
 
         if (error) throw error;
-        toast.success('Tạo khóa học thành công');
+        toast.success(role === 'lecturer' ? 'Yêu cầu tạo khóa học đã được gửi, chờ admin phê duyệt' : 'Tạo khóa học thành công');
       }
 
       setOpen(false);
