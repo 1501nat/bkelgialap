@@ -18,6 +18,8 @@ import Assignments from "./pages/Assignments";
 import Attendance from "./pages/Attendance";
 import Announcements from "./pages/Announcements";
 import Enrollments from "./pages/Enrollments";
+import CourseApprovals from "./pages/CourseApprovals";
+import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -146,6 +148,26 @@ const App = () => {
                   <ProtectedRoute allowedRoles={['admin', 'lecturer']}>
                     <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
                       <Enrollments />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/approvals"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <CourseApprovals />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/courses/:id"
+                element={
+                  <ProtectedRoute>
+                    <Layout darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)}>
+                      <CourseDetail />
                     </Layout>
                   </ProtectedRoute>
                 }
