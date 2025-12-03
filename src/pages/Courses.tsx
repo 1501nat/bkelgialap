@@ -396,92 +396,163 @@ const Courses = () => {
         )}
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course, index) => {
-          const enrollment = role === 'student' ? studentEnrollments[course.id] : null;
-          const enrollmentStatus = enrollment?.status;
-          const disableRegister = !!enrollment;
-          return (
+      {role === 'student' ? (
+        <>
+          {/* Danh sách khóa học đã đăng ký */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Khóa học đã đăng ký</h2>
+            {courses.filter(c => studentEnrollments[c.id]).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter(course => studentEnrollments[course.id])
+                  .map((course, index) => {
+                    const enrollmentStatus = studentEnrollments[course.id]?.status;
+                    return (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer h-full">
+                          <CardHeader className="pb-4" style={{ borderLeft: `4px solid ${course.color}` }}>
+                            <div className="flex-1">
+                              <CardTitle className="text-lg mb-1">{course.code}</CardTitle>
+                              <CardDescription className="text-base font-medium text-foreground">
+                                {course.name}
+                              </CardDescription>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className={`text-xs font-medium px-2 py-1 rounded-full inline-flex ${
+                              enrollmentStatus === 'approved' 
+                                ? 'bg-green-100 text-green-700' 
+                                : enrollmentStatus === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                            }`}>
+                              {enrollmentStatus === 'approved' ? 'Đã được duyệt' : enrollmentStatus === 'pending' ? 'Chờ duyệt' : 'Bị từ chối'}
+                            </div>
+                            <div className="flex gap-2 mt-4">
+                              <Link to={`/courses/${course.id}`} className="flex-1">
+                                <Button variant="outline" className="w-full">
+                                  <BookOpen className="mr-2 h-4 w-4" />
+                                  Xem chi tiết
+                                </Button>
+                              </Link>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Bạn chưa đăng ký khóa học nào.</p>
+            )}
+          </div>
+
+          {/* Danh sách khóa học chưa đăng ký */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Khóa học khác</h2>
+            {courses.filter(c => !studentEnrollments[c.id]).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter(course => !studentEnrollments[course.id])
+                  .map((course, index) => (
+                    <motion.div
+                      key={course.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer h-full">
+                        <CardHeader className="pb-4" style={{ borderLeft: `4px solid ${course.color}` }}>
+                          <div className="flex-1">
+                            <CardTitle className="text-lg mb-1">{course.code}</CardTitle>
+                            <CardDescription className="text-base font-medium text-foreground">
+                              {course.name}
+                            </CardDescription>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex gap-2 mt-4">
+                            <Link to={`/courses/${course.id}`} className="flex-1">
+                              <Button variant="outline" className="w-full">
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Xem chi tiết
+                              </Button>
+                            </Link>
+                            <Button
+                              className="flex-1"
+                              onClick={() => handleRegister(course.id)}
+                            >
+                              Đăng ký
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Không có khóa học nào khác.</p>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course, index) => (
             <motion.div
               key={course.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-            <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer h-full">
-              <CardHeader className="pb-4" style={{ borderLeft: `4px solid ${course.color}` }}>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-1">{course.code}</CardTitle>
-                    <CardDescription className="text-base font-medium text-foreground">
-                      {course.name}
-                    </CardDescription>
-                  </div>
-                  {(role === 'admin' || (role === 'lecturer' && course.lecturer_id === user?.id)) && (
-                    <div className="flex gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => openEditDialog(course)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDelete(course.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+              <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer h-full">
+                <CardHeader className="pb-4" style={{ borderLeft: `4px solid ${course.color}` }}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-1">{course.code}</CardTitle>
+                      <CardDescription className="text-base font-medium text-foreground">
+                        {course.name}
+                      </CardDescription>
                     </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {role === 'student' ? (
-                  <>
-                    {enrollmentStatus && (
-                      <div className={`text-xs font-medium px-2 py-1 rounded-full inline-flex mt-2 ${
-                        enrollmentStatus === 'approved' 
-                          ? 'bg-green-100 text-green-700' 
-                          : enrollmentStatus === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
-                      }`}>
-                        {enrollmentStatus === 'approved' ? 'Đã được duyệt' : enrollmentStatus === 'pending' ? 'Chờ duyệt' : 'Bị từ chối'}
+                    {(role === 'admin' || (role === 'lecturer' && course.lecturer_id === user?.id)) && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openEditDialog(course)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDelete(course.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     )}
-                    <div className="flex gap-2 mt-4">
-                      <Link to={`/courses/${course.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full">
-                          <BookOpen className="mr-2 h-4 w-4" />
-                          Xem chi tiết
-                        </Button>
-                      </Link>
-                      <Button
-                        className="flex-1"
-                        onClick={() => handleRegister(course.id)}
-                        disabled={disableRegister}
-                      >
-                        {disableRegister ? (enrollmentStatus === 'rejected' ? 'Bị từ chối' : 'Đã đăng ký') : 'Đăng ký'}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <Link to={`/courses/${course.id}`}>
                     <Button variant="outline" className="w-full mt-2">
                       <BookOpen className="mr-2 h-4 w-4" />
                       Xem chi tiết
                     </Button>
                   </Link>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )})}
-      </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-      {courses.length === 0 && (
+      {courses.length === 0 && role !== 'student' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -489,63 +560,6 @@ const Courses = () => {
         >
           <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground">Chưa có khóa học nào</p>
-        </motion.div>
-      )}
-
-      {courses.length === 0 && role === 'student' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {[
-            {
-              code: 'CO3001',
-              name: 'Cong nghe Phan mem',
-              semester: 'HK1',
-              year: new Date().getFullYear(),
-              lecturer: 'TS. Nguyen Van A',
-              attendance: 'Thu 2 (Tiet 1-3), Thu 4 (Tiet 4-6)',
-            },
-            {
-              code: 'CO2003',
-              name: 'Cau truc du lieu & giai thuat',
-              semester: 'HK1',
-              year: new Date().getFullYear(),
-              lecturer: 'ThS. Tran Thi B',
-              attendance: 'Thu 3 (Tiet 1-3), Thu 5 (Tiet 1-3)',
-            },
-            {
-              code: 'CO2031',
-              name: 'Co so du lieu',
-              semester: 'HK2',
-              year: new Date().getFullYear(),
-              lecturer: 'TS. Le Van C',
-              attendance: 'Thu 2 (Tiet 7-9), Thu 6 (Tiet 4-6)',
-            },
-          ].map((demo, idx) => (
-            <Card key={demo.code} className="shadow-card hover:shadow-hover transition-all">
-              <CardHeader>
-                <CardTitle className="text-lg">{demo.name}</CardTitle>
-                <CardDescription>{demo.code}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>{demo.semester} - {demo.year}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{demo.lecturer}</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-4 w-4 mt-0.5" />
-                  <span>{demo.attendance}</span>
-                </div>
-                <Button className="w-full mt-2">Đăng ký</Button>
-              </CardContent>
-            </Card>
-          ))}
         </motion.div>
       )}
     </div>
