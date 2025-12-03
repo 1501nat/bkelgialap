@@ -24,7 +24,6 @@ export const Navbar = () => {
     { path: '/dashboard', label: 'Bảng điều khiển', roles: ['admin', 'lecturer', 'student'] },
     { path: '/courses', label: 'Khóa học', roles: ['admin', 'lecturer', 'student'] },
     { path: '/assignments', label: 'Bài tập', roles: ['admin', 'lecturer', 'student'] },
-    { path: '/attendance', label: 'Điểm danh', roles: ['lecturer', 'student'] },
     { path: '/enrollments', label: 'Ghi danh', roles: ['lecturer'] },
     { path: '/announcements', label: 'Thông báo', roles: ['admin', 'lecturer', 'student'] },
     { path: '/users', label: 'Người dùng', roles: ['admin'] },

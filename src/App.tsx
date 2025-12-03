@@ -15,7 +15,6 @@ import CourseDetail from "./pages/CourseDetail";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import Assignments from "./pages/Assignments";
-import Attendance from "./pages/Attendance";
 import Announcements from "./pages/Announcements";
 import Enrollments from "./pages/Enrollments";
 import NotFound from "./pages/NotFound";
@@ -115,16 +114,6 @@ const App = () => {
                   <ProtectedRoute>
                     <Layout>
                       <Assignments />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/attendance"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Attendance />
                     </Layout>
                   </ProtectedRoute>
                 }

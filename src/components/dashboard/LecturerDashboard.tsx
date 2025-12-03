@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, FileText, Users, Calendar, Bell } from 'lucide-react';
+import { BookOpen, FileText, Users, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 interface Stats {
   courses: number;
   assignments: number;
-  attendance: number;
   enrollments: number;
 }
 
@@ -41,7 +40,6 @@ export const LecturerDashboard = () => {
   const [stats, setStats] = useState<Stats>({
     courses: 0,
     assignments: 0,
-    attendance: 0,
     enrollments: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -70,16 +68,6 @@ export const LecturerDashboard = () => {
           return count || 0;
         };
 
-        const countAttendance = async () => {
-          if (courseIds.length === 0) return 0;
-          const { count, error } = await supabase
-            .from('attendance')
-            .select('id', { count: 'exact', head: true })
-            .in('course_id', courseIds);
-          if (error) throw error;
-          return count || 0;
-        };
-
         const countEnrollments = async () => {
           if (courseIds.length === 0) return 0;
           const { count, error } = await supabase
@@ -90,9 +78,8 @@ export const LecturerDashboard = () => {
           return count || 0;
         };
 
-        const [assignments, attendance, enrollments] = await Promise.all([
+        const [assignments, enrollments] = await Promise.all([
           countAssignments(),
-          countAttendance(),
           countEnrollments(),
         ]);
 
@@ -105,7 +92,6 @@ export const LecturerDashboard = () => {
         setStats({
           courses: courseCount || 0,
           assignments,
-          attendance,
           enrollments,
         });
         setCourseGroups(grouped);
@@ -142,12 +128,6 @@ export const LecturerDashboard = () => {
       value: stats.assignments,
       icon: <FileText className="h-5 w-5 text-success" />,
       to: '/assignments',
-    },
-    {
-      title: 'Điểm danh',
-      value: stats.attendance,
-      icon: <Calendar className="h-5 w-5 text-warning" />,
-      to: '/attendance',
     },
     {
       title: 'Ghi danh',
