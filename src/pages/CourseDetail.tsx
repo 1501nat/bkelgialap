@@ -14,8 +14,9 @@ interface Course {
   year: number;
   lecturer_id: string | null;
   color: string | null;
+  status?: string;
   lecturer_name?: string;
-  attendance?: { day: string; period: string }[] | null;
+  attendance?: any;
 }
 
 const CourseDetail = () => {

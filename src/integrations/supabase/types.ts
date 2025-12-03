@@ -22,6 +22,7 @@ export type Database = {
           created_by: string
           id: string
           is_global: boolean | null
+          status: string | null
           title: string
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           created_by: string
           id?: string
           is_global?: boolean | null
+          status?: string | null
           title: string
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           created_by?: string
           id?: string
           is_global?: boolean | null
+          status?: string | null
           title?: string
         }
         Relationships: [
@@ -308,7 +311,9 @@ export type Database = {
           date_of_birth: string | null
           email: string
           full_name: string
+          gender: string | null
           id: string
+          phone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -317,7 +322,9 @@ export type Database = {
           date_of_birth?: string | null
           email: string
           full_name: string
+          gender?: string | null
           id: string
+          phone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -326,7 +333,9 @@ export type Database = {
           date_of_birth?: string | null
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
+          phone?: string | null
           updated_at?: string | null
         }
         Relationships: []

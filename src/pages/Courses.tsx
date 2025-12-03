@@ -22,8 +22,9 @@ interface Course {
   lecturer_id: string | null;
   color: string | null;
   created_at: string;
+  status?: string;
   lecturer_name?: string;
-  attendance?: { day: string; period: string }[] | null;
+  attendance?: any;
 }
 
 const Courses = () => {
