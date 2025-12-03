@@ -16,7 +16,7 @@ interface Course {
   color: string | null;
   status?: string;
   lecturer_name?: string;
-  attendance?: any;
+  schedule?: { day: string; period: string }[];
 }
 
 const CourseDetail = () => {
@@ -37,7 +37,10 @@ const CourseDetail = () => {
 
         if (error) throw error;
 
-        let courseData: Course = data as Course;
+        let courseData: Course = {
+          ...data,
+          schedule: (data.schedule as { day: string; period: string }[]) || [],
+        } as Course;
         
         if (data?.lecturer_id) {
           const { data: profile } = await supabase
@@ -126,11 +129,11 @@ const CourseDetail = () => {
             </p>
           </div>
 
-          {course.attendance && (course.attendance as any[]).length > 0 && (
+          {course.schedule && course.schedule.length > 0 && (
             <div>
               <p className="text-sm text-muted-foreground mb-1">Thời khóa biểu</p>
               <div className="space-y-2">
-                {(course.attendance as any[]).map((item: any, idx: number) => (
+                {course.schedule.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
                     <span className="font-medium">{item.day}</span>
                     <span>-</span>

@@ -24,7 +24,7 @@ interface Course {
   created_at: string;
   status?: string;
   lecturer_name?: string;
-  attendance?: any;
+  schedule?: { day: string; period: string }[];
 }
 
 const Courses = () => {
@@ -41,7 +41,7 @@ const Courses = () => {
     semester: '',
     year: new Date().getFullYear(),
     color: '#4CAF50',
-    attendance: [] as { day: string; period: string }[],
+    schedule: [] as { day: string; period: string }[],
   });
   const dayOptions = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
@@ -88,20 +88,24 @@ const Courses = () => {
       // Fetch lecturer names separately
       const coursesWithLecturer = await Promise.all(
         (coursesData || []).map(async (course) => {
+          let lecturer_name: string | undefined;
           if (course.lecturer_id) {
             const { data: profileData } = await supabase
               .from('profiles')
               .select('full_name')
               .eq('id', course.lecturer_id)
               .single();
-            
-            return { ...course, lecturer_name: profileData?.full_name };
+            lecturer_name = profileData?.full_name;
           }
-          return course;
+          return {
+            ...course,
+            lecturer_name,
+            schedule: (course.schedule as { day: string; period: string }[]) || [],
+          };
         })
       );
 
-      setCourses(coursesWithLecturer);
+      setCourses(coursesWithLecturer as Course[]);
     } catch (error: any) {
       toast.error('Lỗi khi tải danh sách khóa học');
       console.error(error);
@@ -114,8 +118,15 @@ const Courses = () => {
     e.preventDefault();
     
     try {
-      // Tạm thời không gửi attendance đềEtránh lỗi khi DB chưa có cột tương ứng
-      const { attendance, ...payload } = formData as any;
+      const payload = {
+        code: formData.code,
+        name: formData.name,
+        description: formData.description,
+        semester: formData.semester,
+        year: formData.year,
+        color: formData.color,
+        schedule: formData.schedule,
+      };
 
       if (editingCourse) {
         const { error } = await supabase
@@ -149,7 +160,7 @@ const Courses = () => {
         semester: '',
         year: new Date().getFullYear(),
         color: '#4CAF50',
-        attendance: [],
+        schedule: [],
       });
       fetchCourses();
     } catch (error: any) {
@@ -204,13 +215,13 @@ const Courses = () => {
     setEditingCourse(course);
     setFormData({
       code: course.code,
-        name: course.name,
-        description: course.description || '',
-        semester: course.semester,
-        year: course.year,
-        color: course.color || '#4CAF50',
-        attendance: (course.attendance as any) || [],
-      });
+      name: course.name,
+      description: course.description || '',
+      semester: course.semester,
+      year: course.year,
+      color: course.color || '#4CAF50',
+      schedule: course.schedule || [],
+    });
     setOpen(true);
   };
 
@@ -254,7 +265,7 @@ const Courses = () => {
                   semester: '',
                   year: new Date().getFullYear(),
                   color: '#4CAF50',
-                  attendance: [],
+                  schedule: [],
                 });
               }}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -329,14 +340,14 @@ const Courses = () => {
                 <div className="col-span-2">
                   <Label>Thời khóa biểu</Label>
                   <div className="space-y-2">
-                    {formData.attendance.map((item, idx) => (
+                    {formData.schedule.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <select
                           value={item.day}
                           onChange={(e) => {
-                            const next = [...formData.attendance];
+                            const next = [...formData.schedule];
                             next[idx] = { ...next[idx], day: e.target.value };
-                            setFormData({ ...formData, attendance: next });
+                            setFormData({ ...formData, schedule: next });
                           }}
                           className="border rounded-md px-3 py-2 text-sm"
                           required
@@ -347,12 +358,12 @@ const Courses = () => {
                           ))}
                         </select>
                         <Input
-                          placeholder="Tiet / Gio hoc"
+                          placeholder="Tiết / Giờ học"
                           value={item.period}
                           onChange={(e) => {
-                            const next = [...formData.attendance];
+                            const next = [...formData.schedule];
                             next[idx] = { ...next[idx], period: e.target.value };
-                            setFormData({ ...formData, attendance: next });
+                            setFormData({ ...formData, schedule: next });
                           }}
                           className="flex-1"
                           required
@@ -362,8 +373,8 @@ const Courses = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            const next = formData.attendance.filter((_, i) => i !== idx);
-                            setFormData({ ...formData, attendance: next });
+                            const next = formData.schedule.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, schedule: next });
                           }}
                         >
                           <X className="h-4 w-4 text-destructive" />
@@ -377,7 +388,7 @@ const Courses = () => {
                       onClick={() =>
                         setFormData({
                           ...formData,
-                          attendance: [...formData.attendance, { day: '', period: '' }],
+                          schedule: [...formData.schedule, { day: '', period: '' }],
                         })
                       }
                     >
@@ -436,21 +447,6 @@ const Courses = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {course.description || 'Chưa có mô tả'}
-                </p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{course.semester} - {course.year}</span>
-                  </div>
-                </div>
-                {course.lecturer_name && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{course.lecturer_name}</span>
-                  </div>
-                )}
                 {role === 'student' ? (
                   <>
                     {isEnrolled && (
