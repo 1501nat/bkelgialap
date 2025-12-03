@@ -62,6 +62,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          link_url: string | null
           max_score: number | null
           title: string
         }
@@ -71,6 +72,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          link_url?: string | null
           max_score?: number | null
           title: string
         }
@@ -80,6 +82,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          link_url?: string | null
           max_score?: number | null
           title?: string
         }

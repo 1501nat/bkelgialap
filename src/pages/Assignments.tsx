@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { FileText, PlusCircle, Clock, CheckCircle, Calendar, Edit, Trash2, BookOpen } from 'lucide-react';
+import { FileText, PlusCircle, Clock, CheckCircle, Calendar, Edit, Trash2, BookOpen, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Assignment {
@@ -21,6 +21,7 @@ interface Assignment {
   due_date: string | null;
   max_score: number;
   created_at: string;
+  link_url: string | null;
   course_name?: string;
   course_code?: string;
   submission_status?: 'submitted' | 'graded' | 'pending';
@@ -47,7 +48,8 @@ const Assignments = () => {
     description: '',
     course_id: '',
     due_date: '',
-    max_score: 100
+    max_score: 100,
+    link_url: ''
   });
 
   useEffect(() => {
@@ -201,7 +203,8 @@ const Assignments = () => {
       description: '',
       course_id: '',
       due_date: '',
-      max_score: 100
+      max_score: 100,
+      link_url: ''
     });
   };
 
@@ -212,7 +215,8 @@ const Assignments = () => {
       description: assignment.description || '',
       course_id: assignment.course_id,
       due_date: assignment.due_date ? format(new Date(assignment.due_date), 'yyyy-MM-dd') : '',
-      max_score: assignment.max_score
+      max_score: assignment.max_score,
+      link_url: assignment.link_url || ''
     });
     setOpen(true);
   };
@@ -335,6 +339,16 @@ const Assignments = () => {
                       rows={4}
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="link_url">Link bài tập</Label>
+                    <Input
+                      id="link_url"
+                      type="url"
+                      placeholder="https://..."
+                      value={formData.link_url}
+                      onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="due_date">Hạn nộp</Label>
@@ -419,7 +433,7 @@ const Assignments = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-lg mb-2">{assignment.title}</CardTitle>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                               {assignment.due_date && (
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-4 w-4" />
@@ -427,6 +441,17 @@ const Assignments = () => {
                                 </div>
                               )}
                               <span>Điểm: {assignment.max_score}</span>
+                              {assignment.link_url && (
+                                <a 
+                                  href={assignment.link_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-primary hover:underline"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  <span>Link bài tập</span>
+                                </a>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
