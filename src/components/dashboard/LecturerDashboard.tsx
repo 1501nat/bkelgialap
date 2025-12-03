@@ -10,6 +10,7 @@ interface Stats {
   courses: number;
   assignments: number;
   enrollments: number;
+  announcements: number;
 }
 
 interface CourseSummary {
@@ -41,6 +42,7 @@ export const LecturerDashboard = () => {
     courses: 0,
     assignments: 0,
     enrollments: 0,
+    announcements: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -89,16 +91,11 @@ export const LecturerDashboard = () => {
           rejected: (coursesData || []).filter((c) => c.status === 'rejected'),
         };
 
-        setStats({
-          courses: courseCount || 0,
-          assignments,
-          enrollments,
-        });
         setCourseGroups(grouped);
 
-        const { data: lecturerAnns } = await supabase
+        const { data: lecturerAnns, count: announcementCount } = await supabase
           .from('announcements')
-          .select('id, title, status')
+          .select('id, title, status', { count: 'exact' })
           .eq('created_by', user.id);
         const groupedAnn = {
           pending: (lecturerAnns || []).filter((a) => a.status === 'pending'),
@@ -106,6 +103,13 @@ export const LecturerDashboard = () => {
           rejected: (lecturerAnns || []).filter((a) => a.status === 'rejected'),
         };
         setAnnouncementGroups(groupedAnn);
+
+        setStats({
+          courses: courseCount || 0,
+          assignments,
+          enrollments,
+          announcements: announcementCount || 0,
+        });
       } catch (error) {
         console.error('Error fetching lecturer stats:', error);
       } finally {
@@ -134,6 +138,12 @@ export const LecturerDashboard = () => {
       value: stats.enrollments,
       icon: <Users className="h-5 w-5 text-destructive" />,
       to: '/enrollments',
+    },
+    {
+      title: 'Thông báo',
+      value: stats.announcements,
+      icon: <Bell className="h-5 w-5 text-warning" />,
+      to: '/announcements',
     },
   ];
 
