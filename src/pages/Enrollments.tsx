@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { UserPlus, Users, Trash2, BookOpen } from 'lucide-react';
+import { UserPlus, Users, Trash2, BookOpen, Check, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Enrollment {
@@ -17,15 +17,25 @@ interface Enrollment {
   student_id: string;
   progress: number;
   enrolled_at: string;
+  status: string;
   course_name?: string;
   course_code?: string;
   student_name?: string;
   student_email?: string;
 }
 
+interface CourseGroup {
+  course_id: string;
+  course_name: string;
+  course_code: string;
+  pending: Enrollment[];
+  approved: Enrollment[];
+  rejected: Enrollment[];
+}
+
 const Enrollments = () => {
   const { role, user } = useAuth();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [courseGroups, setCourseGroups] = useState<CourseGroup[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +88,10 @@ const Enrollments = () => {
         const courseIds = coursesData?.map(c => c.id) || [];
         if (courseIds.length > 0) {
           enrollmentsQuery = enrollmentsQuery.in('course_id', courseIds);
+        } else {
+          setCourseGroups([]);
+          setLoading(false);
+          return;
         }
       }
 
@@ -105,7 +119,32 @@ const Enrollments = () => {
         })
       );
 
-      setEnrollments(enrollmentsWithDetails);
+      // Group by course
+      const groupMap = new Map<string, CourseGroup>();
+      
+      enrollmentsWithDetails.forEach((enrollment) => {
+        if (!groupMap.has(enrollment.course_id)) {
+          groupMap.set(enrollment.course_id, {
+            course_id: enrollment.course_id,
+            course_name: enrollment.course_name || '',
+            course_code: enrollment.course_code || '',
+            pending: [],
+            approved: [],
+            rejected: []
+          });
+        }
+        
+        const group = groupMap.get(enrollment.course_id)!;
+        if (enrollment.status === 'pending') {
+          group.pending.push(enrollment);
+        } else if (enrollment.status === 'approved') {
+          group.approved.push(enrollment);
+        } else {
+          group.rejected.push(enrollment);
+        }
+      });
+
+      setCourseGroups(Array.from(groupMap.values()));
     } catch (error: any) {
       toast.error('Lỗi khi tải danh sách ghi danh');
       console.error(error);
@@ -121,7 +160,6 @@ const Enrollments = () => {
     }
 
     try {
-      // Check if already enrolled
       const { data: existing } = await supabase
         .from('enrollments')
         .select('id')
@@ -139,7 +177,8 @@ const Enrollments = () => {
         .insert([{
           course_id: selectedCourse,
           student_id: selectedStudent,
-          progress: 0
+          progress: 0,
+          status: 'approved'
         }]);
 
       if (error) throw error;
@@ -154,6 +193,35 @@ const Enrollments = () => {
     }
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .update({ status: 'approved' })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Đã duyệt sinh viên');
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .update({ status: 'rejected' })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Đã từ chối sinh viên');
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra');
+    }
+  };
 
   const handleUnenroll = async (id: string) => {
     if (!confirm('Bạn có chắc chắn muốn hủy ghi danh này?')) return;
@@ -171,6 +239,40 @@ const Enrollments = () => {
       toast.error(error.message || 'Có lỗi xảy ra');
     }
   };
+
+  const EnrollmentCard = ({ enrollment, showActions = true }: { enrollment: Enrollment; showActions?: boolean }) => (
+    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+      <div className="flex-1">
+        <p className="font-medium text-sm">{enrollment.student_name}</p>
+        <p className="text-xs text-muted-foreground">{enrollment.student_email}</p>
+        <p className="text-xs text-muted-foreground">
+          Đăng ký: {format(new Date(enrollment.enrolled_at), 'dd/MM/yyyy')}
+        </p>
+      </div>
+      {showActions && (role === 'lecturer' || role === 'admin') && (
+        <div className="flex items-center gap-1">
+          {enrollment.status === 'pending' && (
+            <>
+              <Button size="icon" variant="ghost" onClick={() => handleApprove(enrollment.id)} title="Duyệt">
+                <Check className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => handleReject(enrollment.id)} title="Từ chối">
+                <X className="h-4 w-4 text-red-600" />
+              </Button>
+            </>
+          )}
+          {enrollment.status === 'rejected' && (
+            <Button size="icon" variant="ghost" onClick={() => handleApprove(enrollment.id)} title="Duyệt lại">
+              <Check className="h-4 w-4 text-green-600" />
+            </Button>
+          )}
+          <Button size="icon" variant="ghost" onClick={() => handleUnenroll(enrollment.id)} title="Xóa">
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -254,55 +356,85 @@ const Enrollments = () => {
         </div>
       </motion.div>
 
-      {enrollments.length === 0 ? (
+      {courseGroups.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Chưa có sinh viên nào được ghi danh</p>
+            <p className="text-muted-foreground">Chưa có sinh viên nào đăng ký</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {enrollments.map((enrollment, index) => (
+        <div className="space-y-6">
+          {courseGroups.map((group, index) => (
             <motion.div
-              key={enrollment.id}
+              key={group.course_id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <Card className="shadow-card hover:shadow-hover transition-shadow">
+              <Card className="shadow-card">
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">
-                          {enrollment.course_code} - {enrollment.course_name}
-                        </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">
+                      {group.course_code} - {group.course_name}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Pending */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Clock className="h-4 w-4 text-yellow-600" />
+                        <h4 className="font-medium text-sm">Chờ duyệt ({group.pending.length})</h4>
                       </div>
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        <p className="font-medium text-foreground">
-                          {enrollment.student_name}
-                        </p>
-                        <p>{enrollment.student_email}</p>
-                        <p>Ghi danh: {format(new Date(enrollment.enrolled_at), 'dd/MM/yyyy')}</p>
-                        <p>Tiến độ: {enrollment.progress}%</p>
-                      </div>
+                      {group.pending.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Không có</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {group.pending.map((e) => (
+                            <EnrollmentCard key={e.id} enrollment={e} />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {(role === 'lecturer' || role === 'admin') && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleUnenroll(enrollment.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+
+                    {/* Approved */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <h4 className="font-medium text-sm">Đã duyệt ({group.approved.length})</h4>
+                      </div>
+                      {group.approved.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Không có</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {group.approved.map((e) => (
+                            <EnrollmentCard key={e.id} enrollment={e} showActions={false} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rejected */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <X className="h-4 w-4 text-red-600" />
+                        <h4 className="font-medium text-sm">Đã từ chối ({group.rejected.length})</h4>
+                      </div>
+                      {group.rejected.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Không có</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {group.rejected.map((e) => (
+                            <EnrollmentCard key={e.id} enrollment={e} />
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
-                </CardHeader>
-
+                </CardContent>
               </Card>
             </motion.div>
           ))}
