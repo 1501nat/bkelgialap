@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { FileText, PlusCircle, Clock, CheckCircle, Calendar, Edit, Trash2, BookOpen, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import SubmissionForm from '@/components/assignments/SubmissionForm';
+import SubmissionsList from '@/components/assignments/SubmissionsList';
 
 interface Assignment {
   id: string;
@@ -26,6 +28,11 @@ interface Assignment {
   course_code?: string;
   submission_status?: 'submitted' | 'graded' | 'pending';
   score?: number;
+  submission?: {
+    id: string;
+    file_url: string | null;
+    content: string | null;
+  } | null;
 }
 
 interface GroupedAssignments {
@@ -117,10 +124,12 @@ const Assignments = () => {
           let submissionStatus = 'pending';
           let score = undefined;
           
+          let submissionData = null;
+          
           if (role === 'student') {
             const { data: submission } = await supabase
               .from('submissions')
-              .select('score, graded_at')
+              .select('id, score, graded_at, file_url, content')
               .eq('assignment_id', assignment.id)
               .eq('student_id', user?.id)
               .maybeSingle();
@@ -128,6 +137,11 @@ const Assignments = () => {
             if (submission) {
               submissionStatus = submission.graded_at ? 'graded' : 'submitted';
               score = submission.score;
+              submissionData = {
+                id: submission.id,
+                file_url: submission.file_url,
+                content: submission.content
+              };
             }
           }
           
@@ -136,7 +150,8 @@ const Assignments = () => {
             course_name: course?.name,
             course_code: course?.code,
             submission_status: submissionStatus as any,
-            score
+            score,
+            submission: submissionData
           };
         })
       );
@@ -456,6 +471,14 @@ const Assignments = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             {getStatusBadge(assignment)}
+                            {role === 'student' && (
+                              <SubmissionForm
+                                assignmentId={assignment.id}
+                                userId={user?.id || ''}
+                                existingSubmission={assignment.submission}
+                                onSubmitSuccess={fetchData}
+                              />
+                            )}
                             {(role === 'admin' || role === 'lecturer') && (
                               <>
                                 <Button
@@ -477,13 +500,16 @@ const Assignments = () => {
                           </div>
                         </div>
                       </CardHeader>
-                      {assignment.description && (
-                        <CardContent>
-                          <p className="text-muted-foreground whitespace-pre-wrap">
+                      <CardContent className={assignment.description ? '' : 'pt-0'}>
+                        {assignment.description && (
+                          <p className="text-muted-foreground whitespace-pre-wrap mb-4">
                             {assignment.description}
                           </p>
-                        </CardContent>
-                      )}
+                        )}
+                        {(role === 'admin' || role === 'lecturer') && (
+                          <SubmissionsList assignmentId={assignment.id} />
+                        )}
+                      </CardContent>
                     </Card>
                   </motion.div>
                 ))}
