@@ -219,7 +219,7 @@ export const LecturerDashboard = () => {
                           <p className="text-sm text-muted-foreground">{course.name}</p>
                         </div>
                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${section.badge}`}>
-                          {course.status || 'approved'}
+                          {course.status === 'pending' ? 'Chờ duyệt' : course.status === 'rejected' ? 'Bị từ chối' : 'Đã duyệt'}
                         </span>
                       </div>
                     </div>
@@ -260,7 +260,7 @@ export const LecturerDashboard = () => {
                         <p className="font-medium text-foreground">{ann.title}</p>
                       </div>
                       <span className={`text-xs font-semibold px-2 py-1 rounded-full ${section.badge}`}>
-                        {ann.status || 'approved'}
+                        {ann.status === 'pending' ? 'Chờ duyệt' : ann.status === 'rejected' ? 'Bị từ chối' : 'Đã duyệt'}
                       </span>
                     </div>
                   ))}

@@ -241,7 +241,7 @@ export const AdminDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-foreground mb-2">Bảng điều khiển Admin</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Bảng điều khiển Quản trị viên</h1>
         <p className="text-muted-foreground">Quản lý toàn bộ hệ thống</p>
       </motion.div>
 

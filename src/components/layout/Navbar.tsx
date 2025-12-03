@@ -82,7 +82,9 @@ export const Navbar = () => {
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{profile?.full_name}</p>
                   <p className="text-xs text-muted-foreground">{profile?.email}</p>
-                  <p className="text-xs text-primary font-medium uppercase">{role}</p>
+                  <p className="text-xs text-primary font-medium">
+                    {role === 'admin' ? 'Quản trị viên' : role === 'lecturer' ? 'Giảng viên' : 'Sinh viên'}
+                  </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

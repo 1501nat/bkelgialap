@@ -220,7 +220,7 @@ const Users = () => {
             <CardTitle>Danh sách Người dùng ({filteredUsers.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
-            {renderRoleSection('admin', 'Admin')}
+            {renderRoleSection('admin', 'Quản trị viên')}
             {renderRoleSection('lecturer', 'Giảng viên')}
             {renderRoleSection('student', 'Sinh viên')}
 

@@ -124,7 +124,7 @@ const Admin = () => {
                   <SelectContent>
                     <SelectItem value="student">Sinh viên</SelectItem>
                     <SelectItem value="lecturer">Giảng viên</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="admin">Quản trị viên</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
