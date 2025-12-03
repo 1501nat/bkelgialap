@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, getDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-
 interface Course {
   id: string;
   name: string;
@@ -172,20 +172,22 @@ export const StudentDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Khóa học đã đăng ký
-              </CardTitle>
-              <BookOpen className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{courses.length}</div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Khóa học đã được duyệt
-              </p>
-            </CardContent>
-          </Card>
+          <Link to="/courses">
+            <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Khóa học đã đăng ký
+                </CardTitle>
+                <BookOpen className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-foreground">{courses.length}</div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Khóa học đã được duyệt
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </motion.div>
 
         <motion.div
@@ -193,20 +195,22 @@ export const StudentDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Tổng bài tập
-              </CardTitle>
-              <FileText className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{assignments.length}</div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Bài tập từ các khóa học
-              </p>
-            </CardContent>
-          </Card>
+          <Link to="/assignments">
+            <Card className="shadow-card hover:shadow-hover transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Bài tập cần thực hiện
+                </CardTitle>
+                <FileText className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-foreground">{assignments.length}</div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Bài tập từ các khóa học
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </motion.div>
       </div>
 
