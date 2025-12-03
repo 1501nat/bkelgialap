@@ -229,6 +229,7 @@ export type Database = {
           id: string
           lecturer_id: string | null
           name: string
+          schedule: Json | null
           semester: string
           status: string
           updated_at: string | null
@@ -242,6 +243,7 @@ export type Database = {
           id?: string
           lecturer_id?: string | null
           name: string
+          schedule?: Json | null
           semester: string
           status?: string
           updated_at?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           id?: string
           lecturer_id?: string | null
           name?: string
+          schedule?: Json | null
           semester?: string
           status?: string
           updated_at?: string | null
