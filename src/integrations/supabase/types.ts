@@ -272,6 +272,7 @@ export type Database = {
           enrolled_at: string | null
           id: string
           progress: number | null
+          status: string
           student_id: string
         }
         Insert: {
@@ -280,6 +281,7 @@ export type Database = {
           enrolled_at?: string | null
           id?: string
           progress?: number | null
+          status?: string
           student_id: string
         }
         Update: {
@@ -288,6 +290,7 @@ export type Database = {
           enrolled_at?: string | null
           id?: string
           progress?: number | null
+          status?: string
           student_id?: string
         }
         Relationships: [

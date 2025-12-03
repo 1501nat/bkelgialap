@@ -63,11 +63,11 @@ const Courses = () => {
       if (role === 'student' && user?.id) {
         const { data: enrollmentData } = await supabase
           .from('enrollments')
-          .select('course_id')
+          .select('course_id, status')
           .eq('student_id', user.id);
         const map: Record<string, { status: string }> = {};
-        (enrollmentData || []).forEach((enrollment) => {
-          map[enrollment.course_id] = { status: 'enrolled' };
+        (enrollmentData || []).forEach((enrollment: any) => {
+          map[enrollment.course_id] = { status: enrollment.status };
         });
         setStudentEnrollments(map);
       } else {
@@ -178,9 +178,9 @@ const Courses = () => {
     if (!user?.id) return;
 
     try {
-      const isEnrolled = studentEnrollments[courseId];
-      if (isEnrolled) {
-        toast.error('Bạn đã được ghi danh vào khóa học này');
+      const enrollment = studentEnrollments[courseId];
+      if (enrollment) {
+        toast.error('Bạn đã đăng ký khóa học này rồi');
         return;
       }
 
@@ -190,10 +190,11 @@ const Courses = () => {
           course_id: courseId,
           student_id: user.id,
           progress: 0,
+          status: 'pending',
         }]);
 
       if (error) throw error;
-      toast.success('Đăng ký thành công');
+      toast.success('Đăng ký thành công! Vui lòng chờ giảng viên duyệt.');
       fetchCourses();
     } catch (error: any) {
       toast.error(error.message || 'Không thể đăng ký khóa học');
@@ -397,8 +398,9 @@ const Courses = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course, index) => {
-          const isEnrolled = role === 'student' ? !!studentEnrollments[course.id] : false;
-          const disableRegister = isEnrolled;
+          const enrollment = role === 'student' ? studentEnrollments[course.id] : null;
+          const enrollmentStatus = enrollment?.status;
+          const disableRegister = !!enrollment;
           return (
             <motion.div
               key={course.id}
@@ -438,9 +440,15 @@ const Courses = () => {
               <CardContent className="space-y-3">
                 {role === 'student' ? (
                   <>
-                    {isEnrolled && (
-                      <div className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground inline-flex mt-2">
-                        Đã ghi danh
+                    {enrollmentStatus && (
+                      <div className={`text-xs font-medium px-2 py-1 rounded-full inline-flex mt-2 ${
+                        enrollmentStatus === 'approved' 
+                          ? 'bg-green-100 text-green-700' 
+                          : enrollmentStatus === 'pending'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-red-100 text-red-700'
+                      }`}>
+                        {enrollmentStatus === 'approved' ? 'Đã được duyệt' : enrollmentStatus === 'pending' ? 'Chờ duyệt' : 'Bị từ chối'}
                       </div>
                     )}
                     <div className="flex gap-2 mt-4">
@@ -455,7 +463,7 @@ const Courses = () => {
                         onClick={() => handleRegister(course.id)}
                         disabled={disableRegister}
                       >
-                        {disableRegister ? 'Đã đăng ký' : 'Đăng ký'}
+                        {disableRegister ? (enrollmentStatus === 'rejected' ? 'Bị từ chối' : 'Đã đăng ký') : 'Đăng ký'}
                       </Button>
                     </div>
                   </>
