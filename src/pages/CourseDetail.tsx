@@ -37,16 +37,18 @@ const CourseDetail = () => {
 
         if (error) throw error;
 
+        let courseData: Course = data as Course;
+        
         if (data?.lecturer_id) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
             .eq('id', data.lecturer_id)
             .single();
-          data.lecturer_name = profile?.full_name;
+          courseData = { ...courseData, lecturer_name: profile?.full_name };
         }
 
-        setCourse(data as Course);
+        setCourse(courseData);
       } catch (err) {
         console.error(err);
       } finally {

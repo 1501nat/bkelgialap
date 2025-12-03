@@ -74,11 +74,11 @@ const Courses = () => {
       if (role === 'student' && user?.id) {
         const { data: enrollmentData } = await supabase
           .from('enrollments')
-          .select('course_id, status')
+          .select('course_id')
           .eq('student_id', user.id);
         const map: Record<string, { status: string }> = {};
         (enrollmentData || []).forEach((enrollment) => {
-          map[enrollment.course_id] = { status: enrollment.status };
+          map[enrollment.course_id] = { status: 'enrolled' };
         });
         setStudentEnrollments(map);
       } else {
@@ -178,12 +178,8 @@ const Courses = () => {
     if (!user?.id) return;
 
     try {
-      const status = studentEnrollments[courseId]?.status;
-      if (status === 'pending') {
-        toast.error('Bạn đã đăng ký và đang chờ duyệt');
-        return;
-      }
-      if (status === 'approved') {
+      const isEnrolled = studentEnrollments[courseId];
+      if (isEnrolled) {
         toast.error('Bạn đã được ghi danh vào khóa học này');
         return;
       }
@@ -194,11 +190,10 @@ const Courses = () => {
           course_id: courseId,
           student_id: user.id,
           progress: 0,
-          status: 'pending',
         }]);
 
       if (error) throw error;
-      toast.success('Đăng ký thành công, chờ giảng viên duyệt');
+      toast.success('Đăng ký thành công');
       fetchCourses();
     } catch (error: any) {
       toast.error(error.message || 'Không thể đăng ký khóa học');
@@ -402,15 +397,8 @@ const Courses = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course, index) => {
-          const enrollmentStatus = role === 'student' ? studentEnrollments[course.id]?.status : undefined;
-          const getStatusLabel = (status?: string) => {
-            if (!status) return '';
-            if (status === 'pending') return 'Đang chờ duyệt';
-            if (status === 'approved') return 'Đã ghi danh';
-            if (status === 'rejected') return 'Bị từ chối';
-            return status;
-          };
-          const disableRegister = enrollmentStatus === 'pending' || enrollmentStatus === 'approved';
+          const isEnrolled = role === 'student' ? !!studentEnrollments[course.id] : false;
+          const disableRegister = isEnrolled;
           return (
             <motion.div
               key={course.id}
@@ -465,9 +453,9 @@ const Courses = () => {
                 )}
                 {role === 'student' ? (
                   <>
-                    {enrollmentStatus && (
+                    {isEnrolled && (
                       <div className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground inline-flex mt-2">
-                        {getStatusLabel(enrollmentStatus)}
+                        Đã ghi danh
                       </div>
                     )}
                     <div className="flex gap-2 mt-4">

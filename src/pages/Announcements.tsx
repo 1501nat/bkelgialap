@@ -77,13 +77,13 @@ const Announcements = () => {
       
       if (role === 'student') {
         const courseIds = coursesData?.map(c => c.id) || [];
-        filteredAnnouncements = filteredAnnouncements.filter((a) =>
+        filteredAnnouncements = filteredAnnouncements.filter((a: any) =>
           (supportsStatus ? a.status === 'approved' : true) &&
           (a.is_global || (a.course_id && courseIds.includes(a.course_id)))
         );
       } else if (role === 'lecturer') {
         const courseIds = coursesData?.map(c => c.id) || [];
-        filteredAnnouncements = filteredAnnouncements.filter((a) =>
+        filteredAnnouncements = filteredAnnouncements.filter((a: any) =>
           a.is_global
             ? (supportsStatus ? a.status === 'approved' : true)
             : (a.course_id && courseIds.includes(a.course_id)) || a.created_by === user?.id
