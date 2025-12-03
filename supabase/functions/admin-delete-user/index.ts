@@ -16,17 +16,17 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Extract token from "Bearer <token>"
-    const token = authHeader.replace('Bearer ', '')
-
-    const supabaseClient = createClient(
+    // Use service role to verify the token and get user info
+    const adminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Use getUser with the token directly
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    // Extract token from "Bearer <token>"
+    const token = authHeader.replace('Bearer ', '')
+    
+    // Verify the JWT token using service role
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(token)
     
     if (userError) {
       console.log('User error:', userError.message)
@@ -44,13 +44,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('User authenticated:', user.id)
+    console.log('User authenticated:', user.id, user.email)
 
-    const { data: roleData, error: roleError } = await supabaseClient
+    // Check if user is admin
+    const { data: roleData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (roleError) {
       console.log('Role error:', roleError.message)
@@ -77,11 +78,6 @@ Deno.serve(async (req) => {
     }
 
     console.log('Deleting user:', user_id)
-
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id)
     if (deleteError) {
