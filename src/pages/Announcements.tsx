@@ -27,6 +27,67 @@ interface Announcement {
   status?: string;
 }
 
+interface AnnouncementCardProps {
+  announcement: Announcement;
+  index: number;
+  canEdit: boolean;
+  onEdit: (announcement: Announcement) => void;
+  onDelete: (id: string) => void;
+}
+
+const AnnouncementCard = ({ announcement, index, canEdit, onEdit, onDelete }: AnnouncementCardProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.05 }}
+  >
+    <Card className="shadow-card hover:shadow-hover transition-shadow">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <CardTitle className="text-xl">{announcement.title}</CardTitle>
+              {announcement.status && announcement.status !== 'approved' && (
+                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {announcement.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>{announcement.author_name}</span>
+              {announcement.course_name && (
+                <span className="text-primary">{announcement.course_name}</span>
+              )}
+              <span>{format(new Date(announcement.created_at), 'dd/MM/yyyy HH:mm')}</span>
+            </div>
+          </div>
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEdit(announcement)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(announcement.id)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-foreground whitespace-pre-wrap">{announcement.content}</p>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
+
 const STATUS_COLUMN_ERROR = "'status' column";
 
 const Announcements = () => {
@@ -350,66 +411,50 @@ const Announcements = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {announcements.map((announcement, index) => (
-            <motion.div
-              key={announcement.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className="shadow-card hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <CardTitle className="text-xl">{announcement.title}</CardTitle>
-                        {announcement.is_global && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs">
-                            <Globe className="h-4 w-4" />
-                            Toàn trường
-                          </span>
-                        )}
-                        {announcement.status && announcement.status !== 'approved' && (
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            {announcement.status === 'pending' ? 'Chờ duyệt' : 'Đã từ chối'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{announcement.author_name}</span>
-                        {announcement.course_name && (
-                          <span className="text-primary">{announcement.course_name}</span>
-                        )}
-                        <span>{format(new Date(announcement.created_at), 'dd/MM/yyyy HH:mm')}</span>
-                      </div>
-                    </div>
-                    {canEdit(announcement) && (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(announcement)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(announcement.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-wrap">{announcement.content}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+        <div className="space-y-8">
+          {/* Global Announcements */}
+          {announcements.filter(a => a.is_global).length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Thông báo toàn trường</h2>
+              </div>
+              <div className="grid gap-4">
+                {announcements.filter(a => a.is_global).map((announcement, index) => (
+                  <AnnouncementCard
+                    key={announcement.id}
+                    announcement={announcement}
+                    index={index}
+                    canEdit={canEdit(announcement)}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Course Announcements */}
+          {announcements.filter(a => !a.is_global).length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Bell className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">Thông báo môn học</h2>
+              </div>
+              <div className="grid gap-4">
+                {announcements.filter(a => !a.is_global).map((announcement, index) => (
+                  <AnnouncementCard
+                    key={announcement.id}
+                    announcement={announcement}
+                    index={index}
+                    canEdit={canEdit(announcement)}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
